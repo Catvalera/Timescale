@@ -21,12 +21,6 @@ class TokenPair:
 
 @dataclass(frozen=True, slots=True)
 class AuthResult:
-    """Ответ регистрации/входа/подтверждения.
-
-    need_verify=True  → access_token — временный verify-токен, нужно ввести код из письма
-                         (data: purpose, email, resend_after, expires_in)
-    need_verify=False → выдана полноценная пара токенов (data: user)
-    """
     access_token: str
     refresh_token: str = ""
     need_verify: bool = False
