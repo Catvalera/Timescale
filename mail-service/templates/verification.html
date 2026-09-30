@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Код подтверждения{% endblock %}
+{% block preheader %}Ваш код подтверждения: {{ code | e }}{% endblock %}
+
+{% block content %}
+<tr>
+  <td align="left" style="padding:16px 40px 0 40px;font-family:Arial,Helvetica,sans-serif;color:#16222e">
+    <h1 style="margin:0 0 12px 0;font-size:24px;line-height:32px;font-weight:bold;color:#16222e">
+      {% if purpose == "registration" %}Подтвердите адрес почты{% else %}Подтвердите вход{% endif %}
+    </h1>
+    <p style="margin:0;font-size:16px;line-height:24px;color:#4a5763">
+      {% if name %}{{ name | e }}, в{% else %}В{% endif %}ведите этот код на странице подтверждения,
+      {% if purpose == "registration" %}чтобы завершить регистрацию:{% else %}чтобы войти в аккаунт:{% endif %}
+    </p>
+  </td>
+</tr>
+
+<tr>
+  <td align="center" style="padding:28px 40px">
+    <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+      <tr>
+        <td align="center" bgcolor="#e8f4f5"
+            style="background-color:#e8f4f5;border:1px dashed #0b7a83;border-radius:10px;padding:20px 16px;
+                   font-family:'Courier New',Courier,monospace;font-size:36px;line-height:44px;
+                   font-weight:bold;letter-spacing:10px;color:#0b7a83">
+          {{ code | e }}
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
+
+<tr>
+  <td align="left" style="padding:0 40px 32px 40px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#6b7785">
+    Код действует {{ expires_minutes | default(10) | e }} минут. Никому его не сообщайте.<br/>
+    Если вы не запрашивали код, просто проигнорируйте это письмо.
+  </td>
+</tr>
+{% endblock %}

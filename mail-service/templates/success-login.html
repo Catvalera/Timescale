@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Выполнен вход{% endblock %}
+{% block preheader %}Вход в аккаунт {{ logged_in_at | e }}{% endblock %}
+
+{% block content %}
+<tr>
+  <td align="left" style="padding:16px 40px 0 40px;font-family:Arial,Helvetica,sans-serif;color:#16222e">
+    <h1 style="margin:0 0 12px 0;font-size:24px;line-height:32px;font-weight:bold;color:#16222e">
+      Выполнен вход в аккаунт
+    </h1>
+    <p style="margin:0;font-size:16px;line-height:24px;color:#4a5763">
+      {% if name %}{{ name | e }}, в{% else %}В{% endif %} ваш аккаунт только что вошли.
+    </p>
+  </td>
+</tr>
+
+<tr>
+  <td align="left" style="padding:20px 40px 0 40px">
+    <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"
+           style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#16222e">
+      <tr>
+        <td width="120" style="padding:6px 0;color:#6b7785">Время</td>
+        <td style="padding:6px 0">{{ logged_in_at | e }}</td>
+      </tr>
+      {% if ip %}
+      <tr>
+        <td width="120" style="padding:6px 0;color:#6b7785">IP-адрес</td>
+        <td style="padding:6px 0">{{ ip | e }}</td>
+      </tr>
+      {% endif %}
+      {% if user_agent %}
+      <tr>
+        <td width="120" style="padding:6px 0;color:#6b7785;vertical-align:top">Устройство</td>
+        <td style="padding:6px 0">{{ user_agent | e }}</td>
+      </tr>
+      {% endif %}
+    </table>
+  </td>
+</tr>
+
+<tr>
+  <td align="left" style="padding:20px 40px 32px 40px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#6b7785">
+    Если это были не вы, срочно смените пароль.
+  </td>
+</tr>
+{% endblock %}

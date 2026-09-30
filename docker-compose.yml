@@ -1,0 +1,92 @@
+# Запуск всего проекта:  docker compose up --build
+#   Приложение:        http://localhost:3000
+#   Письма (Mailpit):  http://localhost:8025
+#   Swagger auth:      http://localhost:8001/docs
+#   Swagger данных:    http://localhost:5145/swagger
+
+x-jwt: &jwt
+  SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-me-please-at-least-32-bytes}
+  ALGORITHM_ENCRYPTION: HS256
+  ACCESS_HEADER_TOKEN_NAME: X-Access-Token
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: timescale_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d timescale_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # Тестовый SMTP-сервер: перехватывает все письма и показывает их в веб-интерфейсе
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+
+  mail-service:
+    build: ./mail-service
+    environment:
+      EMAIL_HOST: ${EMAIL_HOST:-mailpit}
+      EMAIL_PORT: ${EMAIL_PORT:-1025}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-no-reply@example.com}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD:-}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-Timescale App}
+      EMAIL_STARTTLS: ${EMAIL_STARTTLS:-false}
+      EMAIL_SSL_TLS: ${EMAIL_SSL_TLS:-false}
+      EMAIL_USE_CREDENTIALS: ${EMAIL_USE_CREDENTIALS:-false}
+      APP_URL: http://localhost:3000
+    depends_on:
+      - mailpit
+    # Порт наружу не публикуется: сервис доступен только внутри docker-сети
+
+  auth-service:
+    build: ./auth-service
+    environment:
+      <<: *jwt
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: timescale_db
+      DB_SCHEMA: auth
+      DB_USER: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      MAIL_SERVICE: http://mail-service:8000/api/
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mail-service:
+        condition: service_started
+    ports:
+      - "8001:8000"
+
+  timescale-service:
+    build: ./timescale-service
+    environment:
+      <<: *jwt
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/timescale_db
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5145:8000"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - auth-service
+      - timescale-service
+    ports:
+      - "3000:80"
+
+volumes:
+  pgdata:
